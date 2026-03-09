@@ -51,4 +51,4 @@ htmlcov/
 .mypy_cache/
 
 # mcp
-mcp_server.json
+mcp_servers.json
