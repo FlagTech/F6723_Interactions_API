@@ -62,7 +62,7 @@ async def chat(
             ),
             stream=True,
         ):
-            if event.event_type == "interaction.start":
+            if event.event_type == "interaction.created":
                 interaction = event.interaction
                 previous_interaction_id = interaction.id
             for hook in hooks:
@@ -83,21 +83,24 @@ text: str = ""
 def show_text(event):
     global live, text
 
-    if event.event_type == "interaction.start":
+    if event.event_type == "step.start":
+        if event.step.type == "model_output":
+            for content in event.step.content:
+                text += content.text
         live = Live(
-            Markdown(""),
+            Markdown(text),
             console=console,
             refresh_per_second=10,
         )
         live.start()
 
-    if event.event_type == "interaction.complete":
+    if event.event_type == "step.stop":
         live.stop()
         live = None
         text = ""
 
     if not (
-        event.event_type == "content.delta" and
+        event.event_type == "step.delta" and
         event.delta.type == "text"
     ):
         return
@@ -109,12 +112,12 @@ def show_function_calls(
     event
 ):
     if not (
-        event.event_type == "content.delta" and
-        event.delta.type == "function_call"
+        event.event_type == "step.start" and
+        event.step.type == "function_call"
     ):
         return
-    name = event.delta.name
-    args = event.delta.arguments
+    name = event.step.name
+    args = event.step.arguments
     console.print(f" →{name}(**{args})")
 
 async def main():
