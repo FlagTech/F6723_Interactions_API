@@ -14,6 +14,7 @@ from mcp_utils import (
     tools_to_functions, sessions_to_functions
 )
 from google_search import google_search
+# from rich.pretty import pprint
 
 load_dotenv()
 client = genai.Client()
@@ -50,7 +51,8 @@ async def chat(
             contents = results
         calls = [] # 串接串流過程中的函式叫用結果
         async for event in await client.aio.interactions.create(
-            model="gemini-2.5-flash",
+            # 使用 gemini-2.5-flash 常會遇到第一次不會回答
+            model="gemini-3-flash-preview",
             previous_interaction_id=previous_interaction_id,
             input=contents,
             tools=functions,
@@ -62,6 +64,7 @@ async def chat(
             ),
             stream=True,
         ):
+            # pprint(f"事件類型: {event.event_type}")
             if event.event_type == "interaction.created":
                 interaction = event.interaction
                 previous_interaction_id = interaction.id
